@@ -31,8 +31,8 @@ class GetTheOptions
 			opts.on("-m N", "--maximum N", "Specify max threshold") do |maximum|
 				options.maximum = maximum
 			end
-			opts.on("-C", "--community", "Specify snmp community") do |community|
-				options.maximum = community
+			opts.on("-C String", "--community String", String, "Specify snmp community") do |community|
+				options.community = community
 			end
 			opts.on("-V", "--verbose", "Run verbosely (debugging only)") do |verbose|
 				options.verbose = verbose
@@ -46,10 +46,27 @@ class GetTheOptions
 				exit
 			end
 		end
+
 		opts.parse!(args)
 		options
+
 	end
 end
 
+class IsHostUp
+  def check(host)
+    if Ping.pingecho(host,2)
+      puts "Device #{host} is up"
+      true
+    else
+      puts "Device #{host} is down"
+      false
+    end
+end
+
+
 options = GetTheOptions.parse(ARGV)
 puts options
+for options.device_list do
+  IsHostUp.check(each)
+end
