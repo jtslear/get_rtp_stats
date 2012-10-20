@@ -2,6 +2,7 @@
 
 require 'optparse'
 require 'ostruct'
+require 'ping'
 
 
 class GetTheOptions
@@ -54,7 +55,7 @@ class GetTheOptions
 end
 
 class IsHostUp
-  def check(host)
+  def self.check(host)
     if Ping.pingecho(host,2)
       puts "Device #{host} is up"
       true
@@ -62,11 +63,12 @@ class IsHostUp
       puts "Device #{host} is down"
       false
     end
+  end
 end
 
 
 options = GetTheOptions.parse(ARGV)
 puts options
-for options.device_list do
-  IsHostUp.check(each)
+options.device_list.each  do |device|
+  IsHostUp.check(device)
 end
