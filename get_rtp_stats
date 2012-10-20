@@ -11,27 +11,31 @@ class GetTheOptions
 		options = OpenStruct.new
 		options.device_list = []
 		options.community = "public" #default to a common community string
-		#options.warning = "0"
-		#options.critical = "0"
+		options.warning = "0"
+		options.critical = "0"
 		options.exit_status = "3"
-		#options.maximum = "0"
+		options.maximum = "0"
+		options.verbose = false
 
 		opts = OptionParser.new do |opts|
-			opts.banner = "Usage: get_rtp_stats [options]"
-			opts.on("-d", "--device", Array, "Input list of devices seperated by a comma") do |device|
+			opts.banner = "Usage: #{opts.program_name} [options]"
+			opts.on("-d x y z", "--device x y z", Array, "Input list of devices seperated by a comma") do |device|
 				options.device_list = device
 			end
-			opts.on("-c", "--critical", "Specify crictal threshold") do |critical|
+			opts.on("-c N", "--critical N", "Specify crictal threshold") do |critical|
 				options.critical = critical
 			end
-			opts.on("-w", "--warning", "Specify warning threshold") do |warning|
+			opts.on("-w N", "--warning N", "Specify warning threshold") do |warning|
 				options.warning = warning
 			end
-			opts.on("-m", "--maximum", "Specify max threshold") do |maximum|
+			opts.on("-m N", "--maximum N", "Specify max threshold") do |maximum|
 				options.maximum = maximum
 			end
 			opts.on("-C", "--community", "Specify snmp community") do |community|
 				options.maximum = community
+			end
+			opts.on("-V", "--verbose", "Run verbosely (debugging only)") do |verbose|
+				options.verbose = verbose
 			end
 			opts.on("-v", "--version", "Prints Version of this script.") do
 				puts "get_rtp_stats #{script_version}"
