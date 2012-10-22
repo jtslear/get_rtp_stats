@@ -56,14 +56,14 @@ end
 
 class IsHostUp
   def self.check(host)
-    if Ping.pingecho(host,2)
-      puts "Device #{host} is up"
-      true
-    else
-      puts "Device #{host} is down"
-      false
-    end
+    Ping.pingecho(host,2)
   end
+end
+
+class DeviceInfo
+  device_id :str
+  up :boolean
+  used_sessions :int
 end
 
 
