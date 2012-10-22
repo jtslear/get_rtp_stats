@@ -70,5 +70,11 @@ end
 options = GetTheOptions.parse(ARGV)
 puts options
 options.device_list.each  do |device|
-  IsHostUp.check(device)
+  if IsHostUp.check(device)
+    options.device_list["available"] = true
+  else
+    options.device_list["available"] = false
+  end
 end
+
+
