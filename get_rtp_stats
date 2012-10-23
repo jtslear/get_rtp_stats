@@ -3,6 +3,7 @@
 require 'optparse'
 require 'ostruct'
 require 'ping'
+require 'snmp'
 
 
 class GetTheOptions
@@ -61,22 +62,34 @@ class IsHostUp
 end
 
 class DeviceInfo
-  device_id :str
-  up :boolean
-  used_sessions :int
+  def initialize(name)
+   device = OpenStruct.new
+   device.name = name
+  end
 end
-
 
 options = GetTheOptions.parse(ARGV)
 puts options
 
-options.device_list.each  do |device|
-  devices << DeviceInfo.new(device)
-  if IsHostUp.check(device)
-    options.device_list["available"] = true
+options.device_list.each do |device|
+  devices = OpenStruct.new
+  devices.name = device
+  devices.up = IsHostUp.check(device)
+  if devices.up
+    puts "#{devices.name} is up."
+    puts "Continuing to create SNMP manager"
+    manager = SNMP::Manager.config(
+      :host       =>  device,
+      :port       =>  161,
+      :community  =>  options.community,
+      :version    =>  :SNMPv2c,
+      :timeout    =>  1,
+      :retries    =>  2
+    )
+    session = SNMP::Manager.open(config = manager)
+    puts manager
+    puts session
   else
-    options.device_list["available"] = false
+    puts "#{devices.name} is down."
   end
 end
-
-
