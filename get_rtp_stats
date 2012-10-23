@@ -3,6 +3,7 @@
 require 'optparse'
 require 'ostruct'
 require 'ping'
+require 'rubygems'
 require 'snmp'
 
 
@@ -78,17 +79,11 @@ options.device_list.each do |device|
   if devices.up
     puts "#{devices.name} is up."
     puts "Continuing to create SNMP manager"
-    manager = SNMP::Manager.config(
-      :host       =>  device,
-      :port       =>  161,
-      :community  =>  options.community,
-      :version    =>  :SNMPv2c,
-      :timeout    =>  1,
-      :retries    =>  2
-    )
-    session = SNMP::Manager.open(config = manager)
-    puts manager
-    puts session
+    puts "#{devices.name}; #{device}; #{options.community}"
+    manager = SNMP::Manager.open
+#    session = SNMP::Manager.open(manager)
+    #puts manager
+    #puts session
   else
     puts "#{devices.name} is down."
   end
