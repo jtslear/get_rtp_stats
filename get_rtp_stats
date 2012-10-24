@@ -69,7 +69,19 @@ class DeviceInfo
   end
 end
 
+if SNMP::MIB.import_supported? then
+  #puts "Import is supported.  Available MIBs include:"
+  #mib_list = SNMP::MIB.list_imported
+  #puts mib_list
+else
+  puts "libsmi package required; yum install libsmi"
+  exit
+end
+
 options = GetTheOptions.parse(ARGV)
+#puts "performing some stupid import"
+#imported_module = SNMP::MIB.import_module("SNMPv2-SMI.yaml", mib_dir="/usr/lib/ruby/gems/1.8/gems/snmp-1.1.0/data/ruby/snmp/mibs")
+#imported_module = SNMP::MIB.import_module("SNMPv2-SMI",mib_dir="/tmp/")
 puts options
 
 options.device_list.each do |device|
@@ -79,9 +91,7 @@ options.device_list.each do |device|
   if devices.up
     puts "#{devices.name} is up."
     puts "Continuing to create SNMP manager"
-    puts "#{devices.name}; #{device}; #{options.community}"
-    manager = SNMP::Manager.open
-#    session = SNMP::Manager.open(manager)
+    manager = SNMP::Manager.open(:host => devices.name, :community => options.community, :mib_modules => "SNMPv2-SMI")
     #puts manager
     #puts session
   else
