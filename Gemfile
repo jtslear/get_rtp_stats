@@ -1,6 +1,3 @@
 source 'https://rubygems.org'
-gem 'optparse'
-gem 'ostruct'
-gem 'ping'
-gem 'rubygems'
+gem 'net-ping'
 gem 'snmp'
