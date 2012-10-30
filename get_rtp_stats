@@ -21,7 +21,7 @@ class GetTheOptions
     options.verbose = false
 
     opts = OptionParser.new do |input|
-      input.banner = "Usage: #{opts.program_name} [options]"
+      input.banner = "Usage: #{input.program_name} [options]"
       input.on("-d x y z", "--device x y z", Array, "Input list of devices seperated by a comma") do |device|
         input.device_list = device
       end
