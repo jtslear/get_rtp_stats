@@ -11,47 +11,47 @@ class GetTheOptions
   def self.parse(args)
 
     script_version = "0.01"
-    objects = OpenStruct.new
-    objects.device_list = []
-    objects.community = "public" # default to a common community string
-    objects.warning = "0"
-    objects.critical = "0"
-    objects.exit_status = "3"
-    objects.maximum = "0"
-    objects.verbose = false
+    options = OpenStruct.new
+    options.device_list = []
+    options.community = "public" # default to a common community string
+    options.warning = "0"
+    options.critical = "0"
+    options.exit_status = "3"
+    options.maximum = "0"
+    options.verbose = false
 
     opts = OptionParser.new do |user_input|
       user_input.banner = "Usage: #{user_input.program_name} [options]"
       user_input.on("-d x y z", "--device x y z", Array, "Input list of devices seperated by a comma") do |device|
-        objects.device_list = device
+        options.device_list = device
       end
       user_input.on("-c N", "--critical N", "Specify crictal threshold") do |critical|
-        objects.critical = critical
+        options.critical = critical
       end
       user_input.on("-w N", "--warning N", "Specify warning threshold") do |warning|
-        objects.warning = warning
+        options.warning = warning
       end
       user_input.on("-m N", "--maximum N", "Specify max threshold") do |maximum|
-        objects.maximum = maximum
+        options.maximum = maximum
       end
       user_input.on("-C String", "--community String", String, "Specify snmp community") do |community|
-        objects.community = community
+        options.community = community
       end
       user_input.on("-V", "--verbose", "Run verbosely (debugging only)") do |verbose|
-        objects.verbose = verbose
+        options.verbose = verbose
       end
       user_input.on("-v", "--version", "Prints Version of this script.") do
         puts "get_rtp_stats #{script_version}"
         exit
       end
       user_input.on_tail("-h", "--help", "Show help message") do
-        puts objects
+        puts options
         exit
       end
     end
 
     opts.parse!(args)
-    objects
+    options
 
   end
 end
@@ -62,7 +62,7 @@ class DeviceInfo
   end
 
   def is_up?
-    Net::Ping.new(name).ping?
+    Net::Ping.new(@name).ping?
   end
 
   def status
@@ -74,7 +74,7 @@ class DeviceInfo
   end
 
   def status_text
-    "#{name} is #{status}"
+    "#{@name} is #{status}"
   end
 end
 
