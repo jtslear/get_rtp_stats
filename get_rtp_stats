@@ -58,11 +58,13 @@ end
 
 class DeviceInfo
   def initialize(name)
-    device = OpenStruct.new
-    device.name = name
+   @name = name
   end
   def is_up
-    Ping.ping?(device.name)
+    Net::Ping.new(@name).ping?
+  end
+  def name
+    @name
   end
 end
 
@@ -82,7 +84,7 @@ options.device_list.each do |device|
   devices = DeviceInfo.new(device)
   if devices.is_up
     devices.up_down = "up"
-    puts "#{devices.name} is #{devices.up_down}."
+    puts "#{devices.name} is up."
     #puts "Continuing to create SNMP manager"
     #manager = SNMP::Manager.open(:host => devices.name, :community => options.community, :mib_modules => "SNMPv2-SMI")
   else
