@@ -60,11 +60,25 @@ class DeviceInfo
   def initialize(name)
    @name = name
   end
-  def is_up
+
+  def is_up?
     Net::Ping.new(@name).ping?
   end
+
   def name
     @name
+  end
+
+  def status
+    if is_up?
+      return "up"
+    else
+     return "down"
+    end
+  end
+
+  def status_text
+    return "#{@name} is #{status}"
   end
 end
 
@@ -80,14 +94,9 @@ end
 options = GetTheOptions.parse(ARGV)
 #puts options
 
-options.device_list.each do |device|
-  devices = DeviceInfo.new(device)
-  if devices.is_up
-    devices.up_down = "up"
-    puts "#{devices.name} is up."
+options.device_list.each do |item|
+  device = DeviceInfo.new(item)
+  puts #{device.status_text}
     #puts "Continuing to create SNMP manager"
     #manager = SNMP::Manager.open(:host => devices.name, :community => options.community, :mib_modules => "SNMPv2-SMI")
-  else
-    puts "#{devices.name} is down."
-  end
 end
