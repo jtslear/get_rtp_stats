@@ -6,7 +6,6 @@ require 'net/ping'
 require 'rubygems'
 require 'snmp'
 
-
 class GetTheOptions
   def self.parse(args)
 
@@ -62,7 +61,9 @@ class DeviceInfo
   end
 
   def is_up?
-    Net::Ping.new(@name).ping?
+    # For some strange reason, ruby cannot create ICMP packets w/o root
+    # So lets check that the host is up AND snmp is listening :-)
+    Net::Ping::UDP.new(@name,161,2).ping?
   end
 
   def status
