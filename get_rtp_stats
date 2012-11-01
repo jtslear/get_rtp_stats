@@ -66,29 +66,16 @@ class DeviceInfo
     Net::Ping::TCP.new(@name,22,2).ping?
   end
 
-  def status
-    if is_up?
-      true
-    else
-     false
-    end
-  end
-
   def status_text
-    "#{@name} is #{status}"
+    "#{@name} is #{is_up?}"
   end
 
   def snmp_manager(community_auth)
-    puts @name + " " + community_auth
     SNMP::Manager.new(:host => @name, :community => community_auth)
   end
 end
 
-if SNMP::MIB.import_supported? then
-  #puts "Import is supported.  Available MIBs include:"
-  #mib_list = SNMP::MIB.list_imported
-  #puts mib_list
-else
+unless SNMP::MIB.import_supported? then
   puts "libsmi package required; yum install libsmi"
   exit
 end
@@ -99,10 +86,9 @@ options = GetTheOptions.parse(ARGV)
 options.device_list.each do |item|
   device = DeviceInfo.new(item)
   puts device.status_text
-  if device.status then
+  if device.is_up? then
     manager = device.snmp_manager(options.community)
-    response = manager.get(["1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0"])
-    response.each_varbind {|vb| puts vb.inspect}
+    puts manager.get_value(["1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0"])
     manager.close
   else
     puts "Host down, no SNMP manager created"
