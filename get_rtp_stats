@@ -56,22 +56,57 @@ class GetTheOptions
 end
 
 class DeviceInfo
-  def initialize(name)
+  def initialize(name,community_auth)
    @name = name
+   @community_auth = community_auth
   end
 
   def is_up?
     # For some strange reason, ruby cannot create ICMP packets w/o root
     # So lets check that the host is up AND ssh is listening
-    Net::Ping::TCP.new(@name,22,2).ping?
+    Net::Ping::TCP.new(@name,80,2).ping?
   end
 
   def status_text
     "#{@name} is #{is_up?}"
   end
 
-  def snmp_manager(community_auth)
-    SNMP::Manager.new(:host => @name, :community => community_auth)
+  def snmp_manager
+    SNMP::Manager.new(:host => @name, :community => @community_auth)
+  end
+
+  def get_rtp_count
+    rtp_interface = 0
+    rtp_active_count = 0
+    while rtp_interface <= 43
+      rtp_active_count = snmp_manager.get_value("1.3.6.1.4.1.5003.9.10.1.4.1.1.1.#{rtp_interface}")
+      rtp_interface += 1
+      puts rtp_active_count
+    end
+    rtp_active_count
+  end
+end
+
+class RTPStats
+  def initialize(critical_input,warning_input)
+    @critical_level = critical_input.to_i
+    @warning_level = warning_input.to_i
+    puts @critical_level
+    puts @warning_level
+  end
+  def status_level(status_input)
+    puts status_input.class
+    puts @critical_level.class
+    case status_input
+    when status_input >= @critical_level
+      2
+    when status_input >= @warning_level
+      1
+    when status_input < @warning_level
+      0
+    else
+      puts "Something is wrong"
+    end
   end
 end
 
@@ -81,16 +116,18 @@ unless SNMP::MIB.import_supported? then
 end
 
 options = GetTheOptions.parse(ARGV)
-#puts options
+rtp_stats = RTPStats.new(options.critical,options.warning)
+
+total_active_connections = 0
 
 options.device_list.each do |item|
-  device = DeviceInfo.new(item)
+  device = DeviceInfo.new(item,options.community)
   puts device.status_text
   if device.is_up? then
-    manager = device.snmp_manager(options.community)
-    puts manager.get_value(["1.3.6.1.2.1.1.1.0", "1.3.6.1.2.1.1.2.0"])
-    manager.close
+    total_active_connections += device.get_rtp_count
   else
     puts "Host down, no SNMP manager created"
   end
+  puts "Total Active: #{total_active_connections}"
+  puts rtp_stats.status_level(total_active_connections)
 end
