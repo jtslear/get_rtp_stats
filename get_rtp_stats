@@ -81,7 +81,6 @@ class DeviceInfo
     while rtp_interface <= 43
       rtp_active_count = snmp_manager.get_value("1.3.6.1.4.1.5003.9.10.1.4.1.1.1.#{rtp_interface}")
       rtp_interface += 1
-      puts rtp_active_count
     end
     rtp_active_count
   end
@@ -91,21 +90,29 @@ class RTPStats
   def initialize(critical_input,warning_input)
     @critical_level = critical_input.to_i
     @warning_level = warning_input.to_i
-    puts @critical_level
-    puts @warning_level
   end
+
   def status_level(status_input)
-    puts status_input.class
-    puts @critical_level.class
-    case status_input
-    when status_input >= @critical_level
+    if status_input >= @critical_level
       2
-    when status_input >= @warning_level
+    elsif status_input >= @warning_level
       1
-    when status_input < @warning_level
+    elsif status_input < @warning_level
       0
     else
-      puts "Something is wrong"
+      3
+    end
+  end
+
+  def status_text(status_input)
+    if status_input == 2
+      "CRITICAL"
+    elsif status_input == 1
+      "WARNING"
+    elsif status_input == 0
+      "OK"
+    else
+      "UNKNOWN"
     end
   end
 end
@@ -126,8 +133,9 @@ options.device_list.each do |item|
   if device.is_up? then
     total_active_connections += device.get_rtp_count
   else
-    puts "Host down, no SNMP manager created"
+    puts "#{item} down, no SNMP manager created"
   end
-  puts "Total Active: #{total_active_connections}"
-  puts rtp_stats.status_level(total_active_connections)
 end
+puts "Total Active: #{total_active_connections}"
+options.exit_status = rtp_stats.status_level(total_active_connections)
+puts rtp_stats.status_text(options.exit_status)
