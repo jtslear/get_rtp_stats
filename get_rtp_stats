@@ -57,8 +57,8 @@ end
 
 class DeviceInfo
   def initialize(name,community_auth)
-   @name = name
-   @community_auth = community_auth
+    @name = name
+    @community_auth = community_auth
   end
 
   def is_up?
@@ -79,10 +79,19 @@ class DeviceInfo
     rtp_interface = 0
     rtp_active_count = 0
     while rtp_interface <= 43
-      rtp_active_count = snmp_manager.get_value("1.3.6.1.4.1.5003.9.10.1.4.1.1.1.#{rtp_interface}")
-      puts rtp_active_count
-      rtp_interface += 1
+      begin
+        rtp_status_result = snmp_manager.get_value("1.3.6.1.4.1.5003.9.10.1.4.1.1.1.#{rtp_interface}")
+        puts rtp_status_result
+        if rtp_status_result == 1
+          rtp_active_count += 1
+        end
+        rtp_interface += 1
+      rescue SNMP::RequestTimeout
+        rtp_interface = 44
+        puts "SNMP Unresponsive on #{@name}"
+      end
     end
+    puts "#{@name} rtp Total: #{rtp_active_count}"
     rtp_active_count
   end
 end
