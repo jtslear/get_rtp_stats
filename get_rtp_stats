@@ -94,9 +94,10 @@ class DeviceInfo
 end
 
 class RTPStats
-  def initialize(critical_input,warning_input)
+  def initialize(critical_input,warning_input,max_input)
     @critical_level = critical_input.to_i
     @warning_level = warning_input.to_i
+    @maximum_level = max_input.to_i
   end
 
   def status_level(status_input)
@@ -122,6 +123,13 @@ class RTPStats
       "UNKNOWN"
     end
   end
+
+  def print_rtp_stats(input_devices)
+    # should print out "'deviceN'=9;80;87;;92' "
+    input_devices.each do |key, value|
+      "'#{key}'=#{value};#{@warning_level};#{@critical_level};;#{@maximum_level} "
+    end
+  end
 end
 
 unless SNMP::MIB.import_supported? then
@@ -130,31 +138,26 @@ unless SNMP::MIB.import_supported? then
 end
 
 options = GetTheOptions.parse(ARGV)
-rtp_stats = RTPStats.new(options.critical,options.warning)
+rtp_stats = RTPStats.new(options.critical,options.warning,options.maximum)
+another_fucking_variable = Hash.new
 
 total_active_connections = 0
-# Becareful!  I need the date to return in the same order we grabbed it
-device_rtp = Hash.new
 
 options.device_list.each do |item|
   device = DeviceInfo.new(item,options.community)
   puts device.status_text
   if device.is_up? then
     current_rtp_session_count = device.get_rtp_count
-    device_rtp[item] = current_rtp_session_count
-    puts "#{item} count: #{device_rtp[item]}"
+    puts "#{item} count: #{current_rtp_session_count}"
+    another_fucking_variable[item] = current_rtp_session_count
   else
     puts "#{item} down, no SNMP manager created"
   end
   total_active_connections += current_rtp_session_count
   current_rtp_session_count = 0
 end
-# Let's print things out right here:
-device_rtp_stats = Array.new(2, device_rtp)
-puts "Total Active: #{total_active_connections}"
+# We need it to print it in the format like this:
+# OK Active Channels: 14 |'device1'=0;80;87;;92 'device2'=10;80;87;;92 'deviceN'=4;80;87;;92
+puts "#{rtp_stats.status_text(options.exit_status)} Active Channels: #{total_active_connections} | #{rtp_stats.print_rtp_stats(another_fucking_variable)}"
 options.exit_status = rtp_stats.status_level(total_active_connections)
 puts rtp_stats.status_text(options.exit_status)
-# We need it to print it in the format like this:
-# OK Active Channels: 14 |'10.2.0.2'=0;80;87;;92 '10.2.0.3'=10;80;87;;92 '10.2.0.5'=4;80;87;;92
-puts "#{rtp_stats.status_text(options.exit_status)} Active Channels: #{total_active_connections} | '"
-puts device_rtp_stats[1]
