@@ -125,10 +125,13 @@ class RTPStats
   end
 
   def print_rtp_stats(input_devices)
-    # should print out "'deviceN'=9;80;87;;92' "
+    string = ""
     input_devices.each do |key, value|
-      "'#{key}'=#{value};#{@warning_level};#{@critical_level};;#{@maximum_level} "
+      the_device = key
+      the_rtp_count = value
+      string << "'#{the_device}'=#{the_rtp_count};#{@warning_level};#{@critical_level};;#{@maximum_level} "
     end
+    string
   end
 end
 
@@ -139,7 +142,7 @@ end
 
 options = GetTheOptions.parse(ARGV)
 rtp_stats = RTPStats.new(options.critical,options.warning,options.maximum)
-another_fucking_variable = Hash.new
+device_stats_table = Hash.new
 
 total_active_connections = 0
 
@@ -149,15 +152,14 @@ options.device_list.each do |item|
   if device.is_up? then
     current_rtp_session_count = device.get_rtp_count
     puts "#{item} count: #{current_rtp_session_count}"
-    another_fucking_variable[item] = current_rtp_session_count
+    device_stats_table[item] = current_rtp_session_count
   else
     puts "#{item} down, no SNMP manager created"
   end
   total_active_connections += current_rtp_session_count
   current_rtp_session_count = 0
 end
-# We need it to print it in the format like this:
-# OK Active Channels: 14 |'device1'=0;80;87;;92 'device2'=10;80;87;;92 'deviceN'=4;80;87;;92
-puts "#{rtp_stats.status_text(options.exit_status)} Active Channels: #{total_active_connections} | #{rtp_stats.print_rtp_stats(another_fucking_variable)}"
+options.exit_status = rtp_stats.status_level(total_active_connections)
+puts "#{rtp_stats.status_text(options.exit_status)} Active Channels: #{total_active_connections} | #{rtp_stats.print_rtp_stats(device_stats_table)}"
 options.exit_status = rtp_stats.status_level(total_active_connections)
 puts rtp_stats.status_text(options.exit_status)
