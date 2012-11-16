@@ -17,6 +17,7 @@ Data is printed in graphite format
 
 # Example:
 ```
+get_rtp_stats -d hostname1,hostname2
 rtp_stats.hostname1 9 12353093359
 rtp_stats.hostname2 0 12353093359
 rtp_stats.total 9 12353093359
