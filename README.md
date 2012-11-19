@@ -6,10 +6,11 @@ Get a count of all active RTP sessions
 # Usage: 
 ```
 get_rtp_stats [options]                                                                           
-    -d, --device x y z               Input list of devices seperated by a comma                          
+    -d, --device x y z               Input list of devices seperated by a comma, this can be "unlimited" 
+    -g, --graphite String            Input hostname of the graphite server
     -C, --community String           Specify snmp community                                              
-    -V, --verbose                    Run verbosely (debugging only)                                      
-    -v, --version                    Prints Version of this script.                                      
+    -v, --verbose                    Run verbosely (debugging only, will not send data to graphite when run verbosely)                                      
+    -V, --version                    Prints Version of this script.                                      
     -h, --help                       Show help message 
 ```
 
