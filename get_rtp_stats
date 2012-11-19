@@ -81,23 +81,28 @@ class DeviceInfo
     while rtp_interface <= 43
       begin
         rtp_status_result = snmp_manager.get_value("1.3.6.1.4.1.5003.9.10.1.4.1.1.1.#{rtp_interface}")
-        print_verbose(rtp_status_result)
+        print_verbose("#{rtp_status_result}",print_line: false) 
         if rtp_status_result == 1
           rtp_active_count += 1
         end
         rtp_interface += 1
       rescue SNMP::RequestTimeout
-        print_verbose("No response from #{@name}\n")
+        print_verbose("No snmp response from #{@name}")
         rtp_interface = 44
+        rtp_active_count = nil
       end
     end
     rtp_active_count
   end
 end
 
-def print_verbose(input)
-  if $VERBOSE
-    print input
+def print_verbose(input,options={})
+  unless $VERBOSE != true then
+    if options[:print_line] == false
+      print input
+    else
+      puts input
+    end
   end
 end
 
@@ -107,8 +112,7 @@ unless SNMP::MIB.import_supported? then
 end
 
 options = GetTheOptions.parse(ARGV)
-print_verbose("Verbose option enabled.\n")
-devtce_stats_table = Hash.new
+print_verbose("Verbose option enabled")
 current_time = Time.now.to_i
 
 total_active_connections = 0
@@ -116,11 +120,15 @@ total_active_connections = 0
 options.device_list.each do |item|
   device = DeviceInfo.new(item,options.community)
   if device.is_up? then
-    print_verbose("#{item} is up\n")
+    print_verbose("#{item} is up")
     current_rtp_session_count = device.get_rtp_count
-    puts "rtp_stats.#{item} #{current_rtp_session_count} #{current_time}"
+    if current_rtp_session_count then
+      puts "rtp_stats.#{item} #{current_rtp_session_count} #{current_time}"
+    else
+      current_rtp_session_count = 0
+    end
   else
-    print_verbose("#{item} down, no SNMP manager created\n")
+    print_verbose("#{item} down, no SNMP manager created")
   end
   total_active_connections += current_rtp_session_count
   current_rtp_session_count = 0
