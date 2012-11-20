@@ -4,6 +4,7 @@ require 'optparse'
 require 'ostruct'
 require 'net/ping'
 require 'rubygems'
+require 'socket'
 require 'snmp'
 
 class GetTheOptions
@@ -26,6 +27,9 @@ class GetTheOptions
       end
       user_input.on("-g String", "--graphite String", String, "Input hostname of the graphite server") do |graphite|
         options.graphite_server = graphite
+      end
+      user_input.on("-p Integer", "--port Integer", Integer, "Input port number for graphite instance") do |port|
+        options.graphite_server_port = port
       end
       user_input.on("-C String", "--community String", String, "Specify snmp community") do |community|
         options.community = community
@@ -78,7 +82,8 @@ class DeviceInfo
   def get_rtp_count
     rtp_interface = 0
     rtp_active_count = 0
-    while rtp_interface <= 43
+    # I need to do research into the interface naming schema, 72 channels starting at 0
+    while rtp_interface <= 72
       begin
         rtp_status_result = snmp_manager.get_value("1.3.6.1.4.1.5003.9.10.1.4.1.1.1.#{rtp_interface}")
         print_verbose("#{rtp_status_result}",print_line: false) 
@@ -88,7 +93,8 @@ class DeviceInfo
         rtp_interface += 1
       rescue SNMP::RequestTimeout
         print_verbose("No snmp response from #{@name}")
-        rtp_interface = 44
+        # making this one more so that it escapes, this will need to be redone later
+        rtp_interface = 73
         rtp_active_count = nil
       end
     end
@@ -97,11 +103,29 @@ class DeviceInfo
 end
 
 def print_verbose(input,options={})
-  unless $VERBOSE != true then
+  if $VERBOSE
     if options[:print_line] == false
       print input
     else
       puts input
+    end
+  end
+end
+
+def send_to_graphite(server,port,request)
+  @graphite_server = server
+  @graphite_port = port
+  @message = request
+
+  if $VERBOSE
+    print_verbose("Not sending data to #{@graphite_server} while in verbose mode")
+  else
+    begin
+      socket = TCPSocket.open(@graphite_server,@graphite_port)
+      socket.write(request)
+      socket.close
+    rescue
+      print_verbose("Send to #{@graphite_server} failure")
     end
   end
 end
@@ -114,8 +138,10 @@ end
 options = GetTheOptions.parse(ARGV)
 print_verbose("Verbose option enabled")
 current_time = Time.now.to_i
+device_rtp_print = Array.new
 
 total_active_connections = 0
+current_rtp_session_count = 0
 
 options.device_list.each do |item|
   device = DeviceInfo.new(item,options.community)
@@ -123,7 +149,8 @@ options.device_list.each do |item|
     print_verbose("#{item} is up")
     current_rtp_session_count = device.get_rtp_count
     if current_rtp_session_count then
-      puts "rtp_stats.#{item} #{current_rtp_session_count} #{current_time}"
+      print_verbose("#{item} total: #{current_rtp_session_count}")
+      device_rtp_print.push("rtp_stats.#{item} #{current_rtp_session_count} #{current_time}")
     else
       current_rtp_session_count = 0
     end
@@ -133,4 +160,9 @@ options.device_list.each do |item|
   total_active_connections += current_rtp_session_count
   current_rtp_session_count = 0
 end
-puts "rtp_stats.total #{total_active_connections} #{current_time}"
+device_rtp_print.push("rtp_stats.total #{total_active_connections} #{current_time}")
+request = device_rtp_print.join("\n") + "\n"
+device_rtp_print.each do |item|
+  puts item
+end
+send_to_graphite(options.graphite_server,options.graphite_server_port,request)
