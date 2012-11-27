@@ -80,23 +80,16 @@ class DeviceInfo
   end
 
   def get_rtp_count
-    rtp_interface = 0
     rtp_active_count = 0
-    # I need to do research into the interface naming schema, 72 channels starting at 0
-    while rtp_interface <= 72
-      begin
-        rtp_status_result = snmp_manager.get_value("1.3.6.1.4.1.5003.9.10.1.4.1.1.1.#{rtp_interface}")
-        print_verbose("#{rtp_status_result}",print_line: false) 
-        if rtp_status_result == 1
-          rtp_active_count += 1
+    begin
+      snmp_manager.walk("1.3.6.1.4.1.5003.9.10.1.4.1.1.1") do |index|
+        if index.to_s =~ /value=1/ 
+          print_verbose("#{index}")
+          rtp_active_count = rtp_active_count + 1
         end
-        rtp_interface += 1
-      rescue SNMP::RequestTimeout
-        print_verbose("No snmp response from #{@name}")
-        # making this one more so that it escapes, this will need to be redone later
-        rtp_interface = 73
-        rtp_active_count = nil
       end
+    rescue SNMP::RequestTimeout
+      print_verbose("No snmp response from #{@name}")
     end
     rtp_active_count
   end
@@ -140,7 +133,6 @@ print_verbose("Verbose option enabled")
 current_time = Time.now.to_i
 device_rtp_print = Array.new
 
-total_active_connections = 0
 current_rtp_session_count = 0
 
 options.device_list.each do |item|
@@ -150,17 +142,15 @@ options.device_list.each do |item|
     current_rtp_session_count = device.get_rtp_count
     if current_rtp_session_count then
       print_verbose("#{item} total: #{current_rtp_session_count}")
-      device_rtp_print.push("rtp_stats.#{item} #{current_rtp_session_count} #{current_time}")
+      device_rtp_print.push("rtp_stats.#{item}.rtp_active #{current_rtp_session_count} #{current_time}")
     else
       current_rtp_session_count = 0
     end
   else
     print_verbose("#{item} down, no SNMP manager created")
   end
-  total_active_connections += current_rtp_session_count
   current_rtp_session_count = 0
 end
-device_rtp_print.push("rtp_stats.total #{total_active_connections} #{current_time}")
 request = device_rtp_print.join("\n") + "\n"
 device_rtp_print.each do |item|
   puts item
