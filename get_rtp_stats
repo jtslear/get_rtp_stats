@@ -3,6 +3,7 @@
 require 'optparse'
 require 'ostruct'
 require 'net/ping'
+require 'pidfile'
 require 'rubygems'
 require 'socket'
 require 'snmp'
@@ -122,6 +123,9 @@ def send_to_graphite(server,port,request)
     end
   end
 end
+
+print_verbose("Script Begin")
+pid_file = PidFile.new
 
 unless SNMP::MIB.import_supported? then
   puts "libsmi package required; yum install libsmi"
