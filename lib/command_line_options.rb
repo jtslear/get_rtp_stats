@@ -38,7 +38,11 @@ class CommandLineOptions
     end
 
     begin
-      opts.parse!(args)
+      if args.empty?
+        puts opts
+      else
+        opts.parse!(args)
+      end
     rescue OptionParser::InvalidOption
       puts opts
       exit
