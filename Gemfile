@@ -1,3 +1,5 @@
 source 'https://rubygems.org'
 gem 'net-ping'
 gem 'snmp'
+gem 'pidfile'
+gem 'rspec'
