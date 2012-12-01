@@ -12,4 +12,10 @@ describe 'it can exceute the main file' do
 
     return_text.should include '192.168.5.11'
   end
+
+  # it "should raise an exeception if port is missing" do
+  #   command = "ruby get_rtp_stats -d 192.168.5.11 -g 192.168.5.11  -C public -v "
+
+  #   expect{ system(command) }.to raise_error ArgumentError
+  # end
 end

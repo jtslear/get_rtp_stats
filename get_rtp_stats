@@ -71,24 +71,6 @@ def print_verbose(input,options={})
   end
 end
 
-def send_to_graphite(server,port,request)
-  @graphite_server = server
-  @graphite_port = port
-  @message = request
-
-  if $VERBOSE
-    print_verbose("Not sending data to #{@graphite_server} while in verbose mode")
-  else
-    begin
-      socket = TCPSocket.open(@graphite_server,@graphite_port)
-      socket.write(request)
-      socket.close
-    rescue
-      print_verbose("Send to #{@graphite_server} failure")
-    end
-  end
-end
-
 print_verbose("Script Begin")
 pid_file = PidFile.new
 
@@ -101,6 +83,12 @@ options = GetTheOptions.parse(ARGV)
 print_verbose("Verbose option enabled")
 current_time = Time.now.to_i
 device_rtp_print = Array.new
+
+graphite_server = GraphiteServer.new(address: options.graphite_server, port: options.graphite_server_port)
+
+unless graphite_server.valid?
+  raise ArgumentError
+end
 
 current_rtp_session_count = 0
 
@@ -124,4 +112,5 @@ request = device_rtp_print.join("\n") + "\n"
 device_rtp_print.each do |item|
   puts item
 end
-send_to_graphite(options.graphite_server,options.graphite_server_port,request)
+
+graphite_server.send_request(request)
