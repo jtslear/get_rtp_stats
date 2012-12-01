@@ -30,7 +30,6 @@ end
 
 options = CommandLineOptions.parse(ARGV)
 print_verbose("Verbose option enabled")
-current_time = Time.now.to_i
 printer = Printer.new
 
 graphite_server = GraphiteServer.new(address: options.graphite_server, port: options.graphite_server_port)
@@ -42,20 +41,8 @@ end
 current_rtp_session_count = 0
 
 options.device_list.each do |item|
-  device = DeviceInfo.new(item,options.community)
-  if device.is_up? then
-    print_verbose("#{item} is up")
-    current_rtp_session_count = device.get_rtp_count
-    if current_rtp_session_count then
-      print_verbose("#{item} total: #{current_rtp_session_count}")
-      printer.add_command("rtp_stats.#{item}.rtp_active #{current_rtp_session_count} #{current_time}")
-    else
-      current_rtp_session_count = 0
-    end
-  else
-    print_verbose("#{item} down, no SNMP manager created")
-  end
-  current_rtp_session_count = 0
+  device = Device.new(item,options.community)
+  printer.add_command(device.graphite_status)
 end
 
 printer.print_to_screen
