@@ -10,57 +10,6 @@ require 'snmp'
 
 Dir["lib/*.rb"].each {|f| require_relative f}
 
-class GetTheOptions
-  def self.parse(args)
-
-    script_version = "0.01"
-    options = OpenStruct.new
-    options.device_list = []
-    options.community = "public" # default to a common community string
-    options.warning = "0"
-    options.critical = "0"
-    options.exit_status = "3"
-    options.maximum = "0"
-    options.verbose = false
-
-    opts = OptionParser.new do |user_input|
-      user_input.banner = "Usage: #{user_input.program_name} [options]"
-      user_input.on("-d x y z", "--device x y z", Array, "Input list of devices seperated by a comma") do |device|
-        options.device_list = device
-      end
-      user_input.on("-g String", "--graphite String", String, "Input hostname of the graphite server") do |graphite|
-        options.graphite_server = graphite
-      end
-      user_input.on("-p Integer", "--port Integer", Integer, "Input port number for graphite instance") do |port|
-        options.graphite_server_port = port
-      end
-      user_input.on("-C String", "--community String", String, "Specify snmp community") do |community|
-        options.community = community
-      end
-      user_input.on("-v", "--verbose", "Run verbosely (debugging only)") do |verbose|
-        $VERBOSE = true
-      end
-      user_input.on("-V", "--version", "Prints Version of this script.") do
-        puts "get_rtp_stats #{script_version}"
-        exit
-      end
-      user_input.on_tail("-h", "--help", "Show help message") do
-        puts opts
-        exit
-      end
-    end
-
-    begin
-      opts.parse!(args)
-    rescue OptionParser::InvalidOption
-      puts opts
-      exit
-    end
-    options
-
-  end
-end
-
 def print_verbose(input,options={})
   if $VERBOSE
     if options[:print_line] == false
@@ -79,10 +28,10 @@ unless SNMP::MIB.import_supported? then
   exit
 end
 
-options = GetTheOptions.parse(ARGV)
+options = CommandLineOptions.parse(ARGV)
 print_verbose("Verbose option enabled")
 current_time = Time.now.to_i
-device_rtp_print = Array.new
+printer = Printer.new
 
 graphite_server = GraphiteServer.new(address: options.graphite_server, port: options.graphite_server_port)
 
@@ -99,7 +48,7 @@ options.device_list.each do |item|
     current_rtp_session_count = device.get_rtp_count
     if current_rtp_session_count then
       print_verbose("#{item} total: #{current_rtp_session_count}")
-      device_rtp_print.push("rtp_stats.#{item}.rtp_active #{current_rtp_session_count} #{current_time}")
+      printer.add_command("rtp_stats.#{item}.rtp_active #{current_rtp_session_count} #{current_time}")
     else
       current_rtp_session_count = 0
     end
@@ -108,9 +57,6 @@ options.device_list.each do |item|
   end
   current_rtp_session_count = 0
 end
-request = device_rtp_print.join("\n") + "\n"
-device_rtp_print.each do |item|
-  puts item
-end
 
-graphite_server.send_request(request)
+printer.print_to_screen
+graphite_server.send_request(printer.request)
