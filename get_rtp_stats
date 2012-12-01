@@ -10,16 +10,6 @@ require 'snmp'
 
 Dir["lib/*.rb"].each {|f| require_relative f}
 
-def print_verbose(input,options={})
-  if $VERBOSE
-    if options[:print_line] == false
-      print input
-    else
-      puts input
-    end
-  end
-end
-
 print_verbose("Script Begin")
 pid_file = PidFile.new
 
@@ -30,15 +20,13 @@ end
 
 options = CommandLineOptions.parse(ARGV)
 print_verbose("Verbose option enabled")
-printer = Printer.new
 
+printer = Printer.new
 graphite_server = GraphiteServer.new(address: options.graphite_server, port: options.graphite_server_port)
 
 unless graphite_server.valid?
   raise ArgumentError
 end
-
-current_rtp_session_count = 0
 
 options.device_list.each do |item|
   device = Device.new(item,options.community)
