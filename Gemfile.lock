@@ -1,0 +1,16 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    ffi (1.1.5)
+    net-ldap (0.2.2)
+    net-ping (1.5.3)
+      ffi (>= 1.0.0)
+      net-ldap (~> 0.2.2)
+    snmp (1.1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  net-ping
+  snmp
