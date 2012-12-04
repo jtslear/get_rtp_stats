@@ -10,23 +10,15 @@ require 'snmp'
 
 Dir["lib/*.rb"].each {|f| require_relative f}
 
-print_verbose("Script Begin")
 pid_file = PidFile.new
 
-unless SNMP::MIB.import_supported? then
-  puts "libsmi package required; yum install libsmi"
-  exit
-end
+check_for_libsmi
 
 options = CommandLineOptions.parse(ARGV)
-print_verbose("Verbose option enabled")
+print_verbose("Script begin, verbose option enabled")
 
 printer = Printer.new
 graphite_server = GraphiteServer.new(address: options.graphite_server, port: options.graphite_server_port)
-
-unless graphite_server.valid?
-  raise ArgumentError
-end
 
 options.device_list.each do |item|
   device = Device.new(item,options.community)

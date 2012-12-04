@@ -1,21 +1,18 @@
 describe 'it can exceute the main file' do
+  it "should return the help output" do
+    return_text = `ruby get_rtp_stats`
+    return_text.should include "Usage: get_rtp_stats [options]"
+    return_text.should_not include "Script begin, verbose option enabled"
+  end
+
   it "should return normal exit status" do
-    return_text = `ruby get_rtp_stats -d 192.168.5.11 -g 192.168.5.11 -p 2003 -C public -v `
-
-    return_text.should include 'Verbose option enabled'
-    return_text.should include '192.168.5.11 down, no SNMP manager created'
-    return_text.should include 'Not sending data to 192.168.5.11 while in verbose mode'
+    return_text = `ruby get_rtp_stats -d 127.0.0.1 -g 192.168.1.1 -p 2003 -C public -v `
+    return_text.should include 'Script begin, verbose option enabled'
+    return_text.should include 'rtp_stats.127.0.0.1'
   end
 
-  it "should have the correct ip" do
-    return_text = `ruby get_rtp_stats -d 192.168.5.11 -g 192.168.5.11 -p 2003 -C public -v `
-
-    return_text.should include '192.168.5.11'
+  it "should indicate that a graphite server was not requested" do
+    return_text = `ruby get_rtp_stats -d 127.0.0.1 -v`
+    return_text.should include "Graphite server not specified, not sending data anywhere"
   end
-
-  # it "should raise an exeception if port is missing" do
-  #   command = "ruby get_rtp_stats -d 192.168.5.11 -g 192.168.5.11  -C public -v "
-
-  #   expect{ system(command) }.to raise_error ArgumentError
-  # end
 end
