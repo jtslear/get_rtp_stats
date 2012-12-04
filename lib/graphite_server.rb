@@ -7,20 +7,20 @@ class GraphiteServer
   end
 
   def valid?
-    !address.nil? && !port.nil?
+    !address.nil?
   end
 
   def send_request(request)
-    if $VERBOSE
-      print_verbose("Not sending data to #{address} while in verbose mode")
-    else
+    if valid?
       begin
-        socket = TCPSocket.open(adddress, port)
+        socket = TCPSocket.open(address, port)
         socket.write(request)
         socket.close
       rescue
-        print_verbose("Send to #{address} failure")
+        print_verbose("Send to graphite #{address} failure")
       end
+    else
+      print_verbose("Graphite server not specified, not sending data anywhere")
     end
   end
 end

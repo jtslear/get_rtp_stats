@@ -43,10 +43,12 @@ class Device
           if index.to_s =~ /value=1/
             print_verbose("#{index}")
             rtp_active_count += 1
+          else
+            print_verbose("#{index}")
           end
         end
       rescue SNMP::RequestTimeout
-        print_verbose("No snmp response from #{name}")
+        print_verbose("No snmp response from #{name}; validate community string?")
       end
     else
       print_verbose(failure_message)

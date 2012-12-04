@@ -9,6 +9,7 @@ class CommandLineOptions
     options.exit_status = "3"
     options.maximum = "0"
     options.verbose = false
+    options.graphite_server_port = "2003" # set to the default graphite tcp port
 
     opts = OptionParser.new do |user_input|
       user_input.banner = "Usage: #{user_input.program_name} [options]"
