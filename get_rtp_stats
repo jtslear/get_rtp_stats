@@ -8,7 +8,14 @@ require 'pidfile'
 require 'socket'
 require 'snmp'
 
-Dir["lib/*.rb"].each {|f| require_relative f}
+require_relative 'lib/utilities.rb'
+require_relative 'lib/command_line_options.rb'
+require_relative 'lib/device_info.rb'
+require_relative 'lib/device.rb'
+require_relative 'lib/graphite_server.rb'
+require_relative 'lib/printer.rb'
+
+#Dir["lib/*.rb"].each {|f| require_relative f}
 
 pid_file = PidFile.new
 
