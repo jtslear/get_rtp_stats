@@ -11,7 +11,7 @@ class Printer
 
   def print_to_screen
     commands.each do |command|
-      puts command
+      print_verbose(command)
     end
   end
 

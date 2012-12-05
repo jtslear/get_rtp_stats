@@ -1,6 +1,6 @@
 class CommandLineOptions
   def self.parse(args)
-    script_version = "0.01"
+    script_version = "0.10"
     options = OpenStruct.new
     options.device_list = []
     options.community = "public" # default to a common community string
