@@ -15,9 +15,4 @@ describe 'it can exceute the main file' do
     return_text = `ruby get_rtp_stats -d 127.0.0.1 -v`
     return_text.should include "Graphite server not specified, not sending data anywhere"
   end
-
-  it "should not have any output" do
-    return_text = `ruby get_rtp_stats -d 127.0.0.1`
-    return_text.should_not include 
-  end
 end
